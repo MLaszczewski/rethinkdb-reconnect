@@ -51,6 +51,38 @@ class AutoConnection {
     }
     return disconnected
   }
+
+  run(request, options) {
+    const timeout = options && options.timeout || 10000
+    if(options) delete options.timeout
+    let timeouted = false
+    let finished = false
+    return new Promise((resolve, reject) => {
+      if(timeout < Infinity) {
+        setTimeout(() => {
+          if (finished) return
+          timeouted = true
+          reject("connection timeout")
+        }, timeout)
+      }
+
+      const tryRun = () => {
+        this.connect().then(conn => {
+          if(timeouted) return
+          request.run(conn, options).then(result => {
+            finished = true
+            resolve(result)
+          }).catch(error => {
+            if(this.handleDisconnectError(error)) return tryRun()
+            finished = true
+            reject(error)
+          })
+        })
+      }
+      tryRun()
+    })
+
+  }
 }
 
 
