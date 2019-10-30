@@ -10,7 +10,7 @@ class AutoConnection {
     this.connect()
   }
 
-  async connect() {
+  async connect(wait) {
     if(this.promise) return this.promise
     this.promise = new Promise((resolve, reject) => {
       let tryCount = 0
@@ -28,25 +28,39 @@ class AutoConnection {
           setTimeout(() => tryConnect(), delay)
         })
       }
-      tryConnect()
+      if(wait) setTimeout(tryConnect, wait)
+        else tryConnect()
     })
     return this.promise
   }
 
-  reconnect() {
+  reconnect(wait) {
     console.error(`RETHINKDB RECONNECTING!`)
     this.connected = false
     this.promise = null
-    this.connect()
+    this.connect(wait)
   }
 
   handleDisconnectError(error) {
     let disconnected = false
+    let wait = 0
     if(error.msg == 'Connection is closed.' ) disconnected = true
+    if(error.msg.match(/^Cannot perform read: primary replica for shard .*/g)) {
+      wait = 2000
+      disconnected = true
+    }
+    if(error.msg.match(/^cannot subscribe to table `.*`: primary replica for shard .* not available$/g)) {
+      wait = 2000
+      disconnected = true
+    }
+    if(error.msg.match(/^Cannot perform write: primary replica for shard .* not available$/g)) {
+      wait = 2000
+      disconnected = true
+    }
     if(disconnected) {
       console.error(`RETHINKDB DISCONNECTED!`)
       if (this.connected) {
-        this.reconnect()
+        this.reconnect(wait)
       }
     }
     return disconnected
