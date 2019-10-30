@@ -44,18 +44,20 @@ class AutoConnection {
   handleDisconnectError(error) {
     let disconnected = false
     let wait = 0
-    if(error.msg == 'Connection is closed.' ) disconnected = true
-    if(error.msg.match(/^Cannot perform read: primary replica for shard .*/g)) {
-      wait = 2000
-      disconnected = true
-    }
-    if(error.msg.match(/^cannot subscribe to table `.*`: primary replica for shard .* not available$/g)) {
-      wait = 2000
-      disconnected = true
-    }
-    if(error.msg.match(/^Cannot perform write: primary replica for shard .* not available$/g)) {
-      wait = 2000
-      disconnected = true
+    if(error && error.msg) {
+      if (error.msg == 'Connection is closed.') disconnected = true
+      if (error.msg.match(/^Cannot perform read: primary replica for shard .*/g)) {
+        wait = 2000
+        disconnected = true
+      }
+      if (error.msg.match(/^cannot subscribe to table `.*`: primary replica for shard .* not available$/g)) {
+        wait = 2000
+        disconnected = true
+      }
+      if (error.msg.match(/^Cannot perform write: primary replica for shard .* not available$/g)) {
+        wait = 2000
+        disconnected = true
+      }
     }
     if(disconnected) {
       console.error(`RETHINKDB DISCONNECTED!`)
