@@ -45,7 +45,12 @@ class AutoConnection {
     let disconnected = false
     let wait = 0
     if(error && error.msg) {
-      if (error.msg == 'Connection is closed.') disconnected = true
+      if (error.msg == 'Connection is closed.') {
+        disconnected = true
+      }
+      if (error.msg.match(/^Changefeed aborted (unavailable) in:.*$/g)) {
+        disconnected = true
+      }
       if (error.msg.match(/^Cannot perform read: primary replica for shard .*/g)) {
         wait = 2000
         disconnected = true
