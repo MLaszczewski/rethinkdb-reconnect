@@ -48,6 +48,9 @@ class AutoConnection {
       if (error.msg == 'Connection is closed.') {
         disconnected = true
       }
+      if (error.msg == 'First argument to `run` must be an open connection.') {
+        disconnected = true
+      }
       if (error.msg.match(/^Changefeed aborted (unavailable) in:.*$/g)) {
         disconnected = true
       }
